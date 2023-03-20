@@ -36,8 +36,56 @@ names(sum.tot)[2] <- "comparacion"
 
 sum.tot$comparacion %<>% factor(., levels = c("UNAL", "otras IES"))
 
+sum.tot %>% count(ano)
+
+
+sum.tot <- sum.tot %>% mutate(nyear = 
+                                case_when(ano == 2007 & semestre == 1 ~ 1,
+                                     ano == 2007 & semestre == 2 ~ 2,
+                                     ano == 2008 & semestre == 1 ~ 3,
+                                     ano == 2008 & semestre == 2 ~ 4,
+                                     ano == 2009 & semestre == 1 ~ 5,
+                                     ano == 2009 & semestre == 2 ~ 6,
+                                     ano == 2010 & semestre == 1 ~ 7,
+                                     ano == 2010 & semestre == 2 ~ 8,
+                                     ano == 2011 & semestre == 1 ~ 9,
+                                     ano == 2011 & semestre == 2 ~ 10,
+                                     ano == 2012 & semestre == 1 ~ 11,
+                                     ano == 2012 & semestre == 2 ~ 12,
+                                     ano == 2013 & semestre == 1 ~ 13,
+                                     ano == 2013 & semestre == 2 ~ 14,
+                                     ano == 2014 & semestre == 1 ~ 15,
+                                     ano == 2014 & semestre == 2 ~ 16,
+                                     ano == 2015 & semestre == 1 ~ 17,
+                                     ano == 2015 & semestre == 2 ~ 18,
+                                     ano == 2016 & semestre == 1 ~ 19,
+                                     ano == 2016 & semestre == 2 ~ 20,
+                                     ano == 2017 & semestre == 1 ~ 21,
+                                     ano == 2017 & semestre == 2 ~ 22,
+                                     ano == 2018 & semestre == 1 ~ 23,
+                                     ano == 2018 & semestre == 2 ~ 24,
+                                     ano == 2019 & semestre == 1 ~ 25,
+                                     ano == 2019 & semestre == 2 ~ 26,
+                                     ano == 2020 & semestre == 1 ~ 27,
+                                     ano == 2020 & semestre == 2 ~ 28,
+                                     ano == 2021 & semestre == 1 ~ 29,
+                                     ano == 2021 & semestre == 2 ~ 30))
+
+
+sum.tot$nyear_f <- sum.tot$nyear %>% factor(., ordered = T)
+
+sum.tot %>% group_by(nyear_f) %>% summarise(n = n(), .groups = 'drop') %>%
+  as.data.frame()
+
 # calculate distance
-d_dist <- daisy(sum.tot, metric = "gower",
+# Clustering tomando solo unas varaibles
+# [1] "sector_ies"           "comparacion"         
+# [3] "metodologia"          "area_de_conocimiento"
+# [5] "sexo"                 "demanda_real"        
+# [7] "admitidos"            "demanda_potencial"   
+# [9] "nyear
+
+d_dist <- sum.tot %>% dplyr::select(.,c(1:4,7:11)) %>%  daisy(., metric = "gower",
                 type = list(logratio = 2))
 
 clust <- agnes(d_dist, method = "ward")
@@ -72,6 +120,9 @@ assocstats(table(sum.tot$cluster, sum.tot$area_de_conocimiento))
 assocstats(table(pam_results, sum.tot$area_de_conocimiento))
 
 # Dividir los datos en entrenamiento y prueba -----------------------------
+sum.tot0 <- sum.tot
+sum.tot <- sum.tot %>% dplyr::select(c(1:4,7:11))
+
 set.seed(123)
 
 id_train <- sample(1:nrow(sum.tot),0.7*nrow(sum.tot))
@@ -116,9 +167,11 @@ matriz_confusion$byClass[9:16] %>% mean()
 
 y_pred <- predict(fit, newx = x.test, type = "response")
 
+data.test %>% count(area_de_conocimiento)
+
 # Convertir etiquetas categóricas en valores binarios
 y_test <- ifelse(data.test$area_de_conocimiento ==
-                   "agronomia veterinaria afines", 1, 0)
+                   "ciencias educacion", 1, 0)
 
 # Calcular curva ROC y el área bajo la curva (AUC)
 roc_obj <- roc(y_test, y_pred[1:657])
@@ -151,7 +204,6 @@ matriz_confusion$byClass[1:8] %>% mean()
 matriz_confusion$byClass[9:16] %>% mean()
 
 ### Curvas ROC ###
-
 y_pred <- predict(model_stepAIC,
                   newdata = data.test[,-4], type = "prob")
 
@@ -166,7 +218,6 @@ plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
 
 
 # ajustar los hiperparámetros del modelo ----------------------------------------------------
-
 model <- multinom(area_de_conocimiento ~ ., data = data.train,
                   type = "class")
 
@@ -216,9 +267,9 @@ plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
  
 # Capacidad Predictiva y Clasificadora de las Covariables ----------------
 
-arbol.de <- randomForest(area_de_conocimiento~sector_ies+comparacion+metodologia+
-                           semestre+ano+demanda_real+admitidos+
-                           demanda_potencial+cluster, data = sum.tot, importance = T)
+arbol.de <- randomForest(area_de_conocimiento~sector_ies+
+                           demanda_real+admitidos+
+                           demanda_potencial+nyear+sexo, data = sum.tot, importance = T)
 
 varImpPlot(arbol.de, main = "Capacidad Predictiva y Clasificadora de las Covariables")
 

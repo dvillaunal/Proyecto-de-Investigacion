@@ -86,6 +86,46 @@ names(sum.tot)[2] <- "comparacion"
 
 sum.tot$comparacion %<>% factor(., levels = c("UNAL", "otras IES"))
 
+# Nueva Variable ------------------------------------------------------
+
+sum.tot <- sum.tot %>% mutate(nyear = 
+                                case_when(ano == 2007 & semestre == 1 ~ 1,
+                                     ano == 2007 & semestre == 2 ~ 2,
+                                     ano == 2008 & semestre == 1 ~ 3,
+                                     ano == 2008 & semestre == 2 ~ 4,
+                                     ano == 2009 & semestre == 1 ~ 5,
+                                     ano == 2009 & semestre == 2 ~ 6,
+                                     ano == 2010 & semestre == 1 ~ 7,
+                                     ano == 2010 & semestre == 2 ~ 8,
+                                     ano == 2011 & semestre == 1 ~ 9,
+                                     ano == 2011 & semestre == 2 ~ 10,
+                                     ano == 2012 & semestre == 1 ~ 11,
+                                     ano == 2012 & semestre == 2 ~ 12,
+                                     ano == 2013 & semestre == 1 ~ 13,
+                                     ano == 2013 & semestre == 2 ~ 14,
+                                     ano == 2014 & semestre == 1 ~ 15,
+                                     ano == 2014 & semestre == 2 ~ 16,
+                                     ano == 2015 & semestre == 1 ~ 17,
+                                     ano == 2015 & semestre == 2 ~ 18,
+                                     ano == 2016 & semestre == 1 ~ 19,
+                                     ano == 2016 & semestre == 2 ~ 20,
+                                     ano == 2017 & semestre == 1 ~ 21,
+                                     ano == 2017 & semestre == 2 ~ 22,
+                                     ano == 2018 & semestre == 1 ~ 23,
+                                     ano == 2018 & semestre == 2 ~ 24,
+                                     ano == 2019 & semestre == 1 ~ 25,
+                                     ano == 2019 & semestre == 2 ~ 26,
+                                     ano == 2020 & semestre == 1 ~ 27,
+                                     ano == 2020 & semestre == 2 ~ 28,
+                                     ano == 2021 & semestre == 1 ~ 29,
+                                     ano == 2021 & semestre == 2 ~ 30))
+
+
+sum.tot$nyear_f <- sum.tot$nyear %>% factor(., ordered = T)
+```
+
+
+```{r}
 # calculate distance
 d_dist <- daisy(sum.tot[,-4], metric = "gower",
                 type = list(logratio = 2))
@@ -99,6 +139,8 @@ pam_results <- pam(d_dist, k = 4, diss = TRUE, cluster.only = TRUE)
 
 sum.tot$pam_results <- pam_results
 ```
+
+
 
 ## Evaluación
 
@@ -163,6 +205,9 @@ Inicialmente se hace una partición de los datos en entrenamiento y prueba para 
 
 ```{r}
 # Dividir los datos en entrenamiento y prueba -----------------------------
+sum.tot0 <- sum.tot
+sum.tot <- sum.tot %>% dplyr::select(c(1:4,7:11))
+
 set.seed(123)
 
 id_train <- sample(1:nrow(sum.tot),0.7*nrow(sum.tot))
@@ -423,13 +468,10 @@ plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
 # Capacidad Predictiva y Clasificadora de las Covariables ----------------
 
 arbol.de <- randomForest(area_de_conocimiento~sector_ies+
-                           comparacion+metodologia+
-                           semestre+ano+demanda_real+admitidos+
-                           demanda_potencial+cluster,
-                         data = sum.tot, importance = T)
+                           demanda_real+admitidos+
+                           demanda_potencial+nyear+sexo, data = sum.tot, importance = T)
 
-varImpPlot(arbol.de,
-           main = "Capacidad Predictiva y Clasificadora de las Covariables")
+varImpPlot(arbol.de, main = "Capacidad Predictiva y Clasificadora de las Covariables")
 ```
 
 La conclusión es que el gráfico muestra que la variable "demanda_potencial" es la más importante para predecir la variable "area_de_conocimiento", seguida por "demanda_real" y "admitidos". En general, las variables relacionadas con la demanda de los programas de estudio parecen ser las más importantes para explicar las variaciones en el área de conocimiento. Esto puede ser útil para la toma de decisiones en la planificación y diseño de programas académicos en la institución educativa.
@@ -470,7 +512,7 @@ glmnet_model <- train(area_de_conocimiento ~ .,
 print(glmnet_model)
 ```
 
-los resultados del modelo Elastic Net indican que el valor óptimo de alpha es 0.2 y el valor óptimo de lambda es 0. Esto significa que el modelo final tiene un sesgo moderado y un nivel de regularización mínimo.
+los resultados del modelo Elastic Net indican que el valor óptimo de alpha es 0.5 y el valor óptimo de lambda es 0. Esto significa que el modelo final tiene un sesgo moderado y un nivel de regularización mínimo.
 
 El valor de accuracy obtenido por el modelo final fue de 0.35, lo cual indica que el modelo puede predecir con precisión el área de conocimiento de alrededor del 35% de los estudiantes.
 
@@ -527,7 +569,7 @@ plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
 ```
 
 
-La curva ROC y el área bajo la curva (AUC) calculados para el modelo Elastic Net son bastante prometedores. El AUC promedio de todas las clases es bastante alto, oscilando entre 0.72 y 0.87, lo que sugiere que el modelo es capaz de predecir con precisión las clases de las observaciones. Además, la curva ROC para la clase "agronomia veterinaria afines" tiene un AUC de 0.852, lo que significa que el modelo es capaz de distinguir entre las observaciones positivas y negativas con una tasa de éxito del 85.2%.
+La curva ROC y el área bajo la curva (AUC) calculados para el modelo Elastic Net son bastante prometedores. El AUC promedio de todas las clases es bastante alto, oscilando entre 0.72 y 0.87, lo que sYugiere que el modelo es capaz de predecir con precisión las clases de las observaciones. Además, la curva ROC para la clase "agronomia veterinaria afines" tiene un AUC de 0.859, lo que significa que el modelo es capaz de distinguir entre las observaciones positivas y negativas con una tasa de éxito del 85.2%.
 
 En comparación con los otros modelos aplicados anteriormente, parece que el modelo Elastic Net es el mejor para hacer predicciones precisas y para interpretar la importancia relativa de las características en la predicción. El modelo de árbol de decisión y el modelo de bosque aleatorio proporcionaron una precisión y una sensibilidad más altas en general, pero no son tan buenos para identificar la importancia relativa de las características. Por otro lado, el modelo de regresión logística proporcionó una precisión similar, pero la elastic net es mejor para reducir la multicolinealidad y seleccionar características importantes.
 
