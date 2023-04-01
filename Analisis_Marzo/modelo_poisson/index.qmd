@@ -1,0 +1,148 @@
+---
+title: "Modelo Poisson (Proyecto de Investigación)"
+---
+
+# Introducción
+
+Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.
+
+El modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.
+
+Este sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística.
+
+# Lectura de los datos
+
+# Librerias necesarias
+
+```{python}
+import pandas as pd
+from matplotlib import pyplot as plt
+import numpy as np
+import seaborn as sns
+from patsy import dmatrices
+import statsmodels.api as sm
+plt.style.use('ggplot')
+```
+
+Se leen los datos de la agrupación total que contiene:
+
+- n° de inscritos
+- n° de admitidos
+- n° de graduados
+
+```{python}
+ruta = "/home/daniel/OneDrive/Documentos (OneDrive-UNAL)/pro_inv/Proyecto-de-Investigacion/Analisis_Marzo/BD_agrupada.xlsx"
+
+df0 = pd.read_excel(ruta)
+df0['ano'] = df0['ano'].astype("category")
+```
+
+Antes de analizar los datos, necesitamos observar que el conteo a utilizar como variable de respuesta $Y$ cumplan con el supuesto que la media (nuestro parametro $\lambda$) sea constante, es decir que los valores varien frente a una valor
+
+```{python}
+# Columnas a cosiderar
+v = list()
+for i in [0,1,2,3,5,6,7,8,9]:
+    v.append(list(df0.columns.values)[i])
+
+# Nueva BD agrupando por nyear
+df = df0[v].groupby(['ano', 'sector_ies', 'sexo', 'area_de_conocimiento'], as_index=False)[v[6:9]].agg(np.sum)
+```
+
+Una vez se agruparon los datos por las variables pertinetes tenemos que nuestra nueva BD es:
+
+```{python}
+df.head(5)
+```
+
+Ahora se precede a graficar los datos del conteo de la variable de respuesta (demanda potencial) por algún tipo de varible a agrupar, en este caso se toma por sexo según el caracter de la IES.
+
+```{python}
+# Serie de tiempo de los datos de Demanda potencial
+ax = sns.relplot(kind='line', data=df, x = 'ano', y = 'demanda_potencial', hue='sexo',col='sector_ies', errorbar=None)
+ax.tick_params(axis='x', rotation=90)
+plt.show()
+```
+
+Se puede notar que en los dos casos ninguno cuenta con media constante.
+
+# Partición de los datos
+
+se crean los datos de entramiento y test de los datos, teniendo en cuenta que estos se parten de forma secuencial, se toma el 80% de los datos de arriba hacia abajo dejando el 20% al conjunto de testeo.
+
+```{python}
+df_train = df.iloc[0:384,:]
+df_test = df.iloc[384:480,:]
+print('Training data set length='+str(len(df_train)))
+print('Testing data set length='+str(len(df_test)))
+```
+
+Ahora creamos la formula para aplicar al modelo:
+
+```{python}
+expr = "demanda_potencial~ano+sector_ies+sexo+area_de_conocimiento+demanda_real+admitidos"
+
+# One-hot encoding
+y_train, X_train = dmatrices(expr, df_train,return_type='dataframe')
+y_test, X_test = dmatrices(expr, df_test, return_type='dataframe')
+```
+
+
+Se ajusta el modelo con las matrices de diseño creadas:
+
+```{python}
+poisson_training_results = sm.GLM(y_train, X_train, family=sm.families.Poisson()).fit()
+
+print(poisson_training_results.summary())
+```
+
+Predicciones
+
+```{python}
+poisson_predictions = poisson_training_results.get_prediction(X_test)
+
+poisson_predictions2 = poisson_training_results.get_prediction(X_train)
+
+#summary_frame() returns a pandas DataFrame
+predictions_summary_frame = poisson_predictions.summary_frame()
+
+rmse_test = np.sqrt(np.sum((poisson_predictions.predicted_mean-y_test.demanda_potencial.to_numpy())**2)/192)
+
+rmse_test
+
+rmse_train = np.sqrt(np.sum((poisson_predictions2.predicted_mean-y_train.demanda_potencial.to_numpy())**2)/768)
+
+rmse_train
+
+rmse_train-rmse_test
+
+print(predictions_summary_frame)
+```
+
+# Verificación de los valores reales vs los predichos
+
+```{python}
+#Mlot the predicted counts versus the actual counts for the test data.
+predicted_counts=predictions_summary_frame['mean']
+actual_counts = y_test['demanda_potencial']
+fig = plt.figure()
+fig.suptitle('Predichos vs Reales sobre el N° de graduados')
+predicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')
+actual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')
+plt.legend(handles=[predicted, actual])
+plt.show()
+```
+
+
+Grafico de puntos reales vs predichos
+
+```{python}
+#Show scatter plot of Actual versus Predicted counts
+plt.clf()
+fig = plt.figure()
+fig.suptitle('Scatter plot of Actual versus Predicted counts')
+plt.scatter(x=predicted_counts, y=actual_counts, marker='.')
+plt.xlabel('Predicted counts')
+plt.ylabel('Actual counts')
+plt.show()
+```
