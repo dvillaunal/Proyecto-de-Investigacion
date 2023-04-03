@@ -2,9 +2,9 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "modelo_poisson",
+    "title": "Modelo Poisson (Proyecto de Investigación)",
     "section": "",
-    "text": "This is a Quarto website.\nTo learn more about Quarto websites visit https://quarto.org/docs/websites."
+    "text": "Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.\nEl modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.\nEste sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística."
   },
   {
     "objectID": "about.html",
@@ -12,5 +12,61 @@
     "title": "About",
     "section": "",
     "text": "About this site"
+  },
+  {
+    "objectID": "index.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "href": "index.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "title": "Modelo Poisson (Proyecto de Investigación)",
+    "section": "Verificación de los valores reales vs los predichos",
+    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
+  },
+  {
+    "objectID": "index.html#grafico-de-puntos-reales-vs-predichos",
+    "href": "index.html#grafico-de-puntos-reales-vs-predichos",
+    "title": "Modelo Poisson (Proyecto de Investigación)",
+    "section": "Grafico de puntos reales vs predichos",
+    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n#Show scatter plot of Actual versus Predicted counts\nplt.clf()\nfig = plt.figure()\nfig.suptitle('Scatter plot of Actual versus Predicted counts')\nplt.scatter(x=predicted_counts, y=actual_counts, marker='.')\nplt.xlabel('Predicted counts')\nplt.ylabel('Actual counts')\nplt.show()\n\n\n&lt;Figure size 672x480 with 0 Axes&gt;"
+  },
+  {
+    "objectID": "modelp.html",
+    "href": "modelp.html",
+    "title": "Modelo Poisson",
+    "section": "",
+    "text": "Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.\nEl modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.\nEste sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística."
+  },
+  {
+    "objectID": "modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "href": "modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "title": "Modelo Poisson",
+    "section": "Verificación de los valores reales vs los predichos",
+    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
+  },
+  {
+    "objectID": "modelp.html#grafico-de-puntos-reales-vs-predichos",
+    "href": "modelp.html#grafico-de-puntos-reales-vs-predichos",
+    "title": "Modelo Poisson",
+    "section": "Grafico de puntos reales vs predichos",
+    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n# Linear regression\nm, b = np.polyfit(predicted_counts,actual_counts, 1)\n#Show scatter plot of Actual versus Predicted counts\nfig, ax = plt.subplots(figsize=(8, 8))\nax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = \"blue\")\nax.plot((0, 1), (0, 1), color = \"gray\", transform=ax.transAxes, ls = '--', label=\"1:1 line\")\nax.plot(actual_counts, m*actual_counts+b, color = \"red\", label = \"regression fitted line\")\nax.set(ylabel =\"Actual counts\", xlabel = \"Predicted counts\",\n       title=\"Scatter plot of Actual versus Predicted counts\")\nplt.legend()\nplt.show()"
+  },
+  {
+    "objectID": "modelc.html",
+    "href": "modelc.html",
+    "title": "About",
+    "section": "",
+    "text": "About this site"
+  },
+  {
+    "objectID": "board_modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "href": "board_modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
+    "title": "Untitled",
+    "section": "Verificación de los valores reales vs los predichos",
+    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
+  },
+  {
+    "objectID": "board_modelp.html#grafico-de-puntos-reales-vs-predichos",
+    "href": "board_modelp.html#grafico-de-puntos-reales-vs-predichos",
+    "title": "Untitled",
+    "section": "Grafico de puntos reales vs predichos",
+    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n# Linear regression\nm, b = np.polyfit(predicted_counts,actual_counts, 1)\n#Show scatter plot of Actual versus Predicted counts\nfig, ax = plt.subplots(figsize=(10, 10))\nax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = \"blue\")\nax.plot((0, 1), (0, 1), color = \"gray\", transform=ax.transAxes, ls = '--', label=\"1:1 line\")\nax.plot(actual_counts, m*actual_counts+b, color = \"red\", label = \"regression fitted line\")\nax.set(ylabel =\"Actual counts\", xlabel = \"Predicted counts\",\n       title=\"Scatter plot of Actual versus Predicted counts\")\nplt.legend()\nplt.show()"
   }
 ]

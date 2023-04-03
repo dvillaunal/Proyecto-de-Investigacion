@@ -1,5 +1,5 @@
 ---
-title: "Modelo Poisson (Proyecto de Investigación)"
+title: "Modelo Poisson"
 ---
 
 # Introducción
@@ -96,7 +96,7 @@ poisson_training_results = sm.GLM(y_train, X_train, family=sm.families.Poisson()
 print(poisson_training_results.summary())
 ```
 
-Predicciones
+# Predicciones
 
 ```{python}
 poisson_predictions = poisson_training_results.get_prediction(X_test)
@@ -108,18 +108,18 @@ predictions_summary_frame = poisson_predictions.summary_frame()
 
 rmse_test = np.sqrt(np.sum((poisson_predictions.predicted_mean-y_test.demanda_potencial.to_numpy())**2)/192)
 
-rmse_test
+print("RMSE de test: ",rmse_test)
 
 rmse_train = np.sqrt(np.sum((poisson_predictions2.predicted_mean-y_train.demanda_potencial.to_numpy())**2)/768)
 
-rmse_train
+print("RMSE de train: ",rmse_train)
 
-rmse_train-rmse_test
+print("Error de Predicción: ",rmse_train-rmse_test)
 
 print(predictions_summary_frame)
 ```
 
-# Verificación de los valores reales vs los predichos
+## Verificación de los valores reales vs los predichos
 
 ```{python}
 #Mlot the predicted counts versus the actual counts for the test data.
@@ -134,15 +134,18 @@ plt.show()
 ```
 
 
-Grafico de puntos reales vs predichos
+## Grafico de puntos reales vs predichos
 
 ```{python}
+# Linear regression
+m, b = np.polyfit(predicted_counts,actual_counts, 1)
 #Show scatter plot of Actual versus Predicted counts
-plt.clf()
-fig = plt.figure()
-fig.suptitle('Scatter plot of Actual versus Predicted counts')
-plt.scatter(x=predicted_counts, y=actual_counts, marker='.')
-plt.xlabel('Predicted counts')
-plt.ylabel('Actual counts')
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = "blue")
+ax.plot((0, 1), (0, 1), color = "gray", transform=ax.transAxes, ls = '--', label="1:1 line")
+ax.plot(actual_counts, m*actual_counts+b, color = "red", label = "regression fitted line")
+ax.set(ylabel ="Actual counts", xlabel = "Predicted counts",
+       title="Scatter plot of Actual versus Predicted counts")
+plt.legend()
 plt.show()
 ```
