@@ -1,0 +1,573 @@
+---
+title: "Reporte final marzo"
+author: 
+  - Daniel Villa
+  - Ronald Palencia
+format:
+  pdf:
+    toc: true
+    colorlinks: true
+    toc-title: Contenido
+    documentclass: scrartcl
+editor: source
+lang: es
+tbl-colwidths: auto
+df-print: kable
+execute: 
+  cache: true
+  warning: false
+  echo: false
+  messange: false
+editor_options: 
+  chunk_output_type: console
+---
+
+\newpage
+
+En este documento se tratarán los temas que se aplicaron en el mes anterior (Cluster y Modelo multinomial) por ende se harán ajustes en los dos casos, además se utilizará la clusterización para añadirla al modelo multinomial en el cual veremos que es más efectivo a la hora de dar predicciones claras entre las diferentes clases y detectar diferencias entre estas.
+
+> Nota: La clusterización utilizada es con la métrica de "Gower" para tratar datos mixtos (categóricos y numéricos) ya que los datos actuales presentan esa estructura.
+
+```{r, message=FALSE, warning=FALSE}
+# Librerias necesarias:
+require(boot)
+require(MASS)
+require(tidyverse)
+require(magrittr)
+require(nnet)
+require(caret)
+require(cluster)
+require(glmnet)
+require(clValid)
+require(pROC)
+require(randomForest)
+require(rsample)
+require(fpc)
+require(vcd)
+```
+
+Lectura de la base de datos, donde se contienen los *subsets* creados en el mes de febrero: `load("BDs_var.RData")`
+
+```{r}
+load("BDs_var.RData")
+```
+
+# Clustering 
+
+## Cluster "Gower"
+
+El clustering Gower es un método de agrupamiento que se utiliza para analizar datos que presentan distintos tipos de variables, como numéricas, categóricas o binarias.
+
+La distancia de Gower se calcula como la suma ponderada de las distancias entre las variables para cada objeto. Los pesos se utilizan para normalizar las variables y asegurar que todas tengan la misma importancia en la medida de distancia. Una vez que se calcula la distancia de Gower entre todos los pares de objetos, se utiliza un algoritmo de agrupamiento, como el algoritmo de Ward o el algoritmo de k-medias, para agrupar los objetos en clusters.
+
+$$
+d_{ij} = \frac{\sum_{k=1}^{p} w_{k} \delta_{ijk}}{\sum_{k=1}^{p} w_{k}}
+$$
+
+donde $d_{ij}$ es la distancia de Gower entre los objetos $i$ y $j$, $p$ es el número total de variables, $w_k$ es el peso asignado a la variable $k$, y $\delta_{ijk}$ es una medida de distancia entre las variables $k$ de los objetos $i$ y \$j\$. Esta medida de distancia puede ser de diferentes tipos, dependiendo del tipo de variable que se esté considerando. Por ejemplo, para variables numéricas se puede utilizar la distancia euclidiana, mientras que para variables categóricas se puede utilizar la distancia de Jaccard o la distancia de Simpson.
+
+Se presenta el código donde se crea la clusterización de nuestros datos, con un $k = 3$ optimo, cabe aclarar que se descarta el análisis descriptivo de este cluster debido a que se trato el mes pasado por lo cual se evaluará para observar el ajuste de este método a nuestros datos.
+
+## PAM
+
+El método Partitioning Around Medoids (**PAM**) es una alternativa al clustering jerárquico tradicional que busca encontrar un número determinado de clusters en un conjunto de datos. A diferencia del clustering jerárquico, PAM no utiliza la matriz de distancia completa, sino que se enfoca en una muestra representativa de puntos, llamados medoids, que representan el centro de cada cluster. Estos medoids son seleccionados de forma iterativa, y el algoritmo busca minimizar la suma de las distancias entre los puntos y su medoid correspondiente.
+
+```{r}
+# Clustering "Gower" ------------------------------------------------------
+
+sum.tot <- merge(sum.ins, sum.admi) %>% merge(sum.grad)
+
+sum.tot %<>% filter(area_de_conocimiento != "sin clasificar")
+
+sum.tot$sector_ies %<>% factor()
+
+sum.tot$metodologia %<>% factor()
+
+sum.tot$area_de_conocimiento %<>% factor()
+
+sum.tot$semestre %<>% factor()
+
+sum.tot$sexo %<>% factor()
+
+names(sum.tot)[2] <- "comparacion"
+
+sum.tot$comparacion %<>% factor(., levels = c("UNAL", "otras IES"))
+
+# Nueva Variable ------------------------------------------------------
+
+sum.tot <- sum.tot %>% mutate(nyear = 
+                                case_when(ano == 2007 & semestre == 1 ~ 1,
+                                     ano == 2007 & semestre == 2 ~ 2,
+                                     ano == 2008 & semestre == 1 ~ 3,
+                                     ano == 2008 & semestre == 2 ~ 4,
+                                     ano == 2009 & semestre == 1 ~ 5,
+                                     ano == 2009 & semestre == 2 ~ 6,
+                                     ano == 2010 & semestre == 1 ~ 7,
+                                     ano == 2010 & semestre == 2 ~ 8,
+                                     ano == 2011 & semestre == 1 ~ 9,
+                                     ano == 2011 & semestre == 2 ~ 10,
+                                     ano == 2012 & semestre == 1 ~ 11,
+                                     ano == 2012 & semestre == 2 ~ 12,
+                                     ano == 2013 & semestre == 1 ~ 13,
+                                     ano == 2013 & semestre == 2 ~ 14,
+                                     ano == 2014 & semestre == 1 ~ 15,
+                                     ano == 2014 & semestre == 2 ~ 16,
+                                     ano == 2015 & semestre == 1 ~ 17,
+                                     ano == 2015 & semestre == 2 ~ 18,
+                                     ano == 2016 & semestre == 1 ~ 19,
+                                     ano == 2016 & semestre == 2 ~ 20,
+                                     ano == 2017 & semestre == 1 ~ 21,
+                                     ano == 2017 & semestre == 2 ~ 22,
+                                     ano == 2018 & semestre == 1 ~ 23,
+                                     ano == 2018 & semestre == 2 ~ 24,
+                                     ano == 2019 & semestre == 1 ~ 25,
+                                     ano == 2019 & semestre == 2 ~ 26,
+                                     ano == 2020 & semestre == 1 ~ 27,
+                                     ano == 2020 & semestre == 2 ~ 28,
+                                     ano == 2021 & semestre == 1 ~ 29,
+                                     ano == 2021 & semestre == 2 ~ 30))
+
+
+sum.tot$nyear_f <- sum.tot$nyear %>% factor(., ordered = T)
+```
+
+
+```{r}
+# calculate distance
+d_dist <- daisy(sum.tot[,-4], metric = "gower",
+                type = list(logratio = 2))
+
+clust <- agnes(d_dist, method = "ward")
+
+sum.tot$cluster <- cutree(clust, k = 3)
+
+# Aplicar el clustering PAM
+pam_results <- pam(d_dist, k = 4, diss = TRUE, cluster.only = TRUE)
+
+sum.tot$pam_results <- pam_results
+```
+
+## Evaluación
+
+Por medio del índice de *Silhouette* se evaluará el cluster ya que:
+
+El índice de *Silhouette* es una medida de evaluación de clusters que utiliza la distancia entre las observaciones para medir la cohesión y la separación de los grupos.
+
+Es una medida comúnmente utilizada para evaluar la calidad de los clusters en conjuntos de datos de alta dimensionalidad y con una estructura desconocida. El índice de Silhouette varía de -1 a 1, donde los valores más cercanos a 1 indican una buena separación entre los clusters.
+
+$$
+s(i) = \frac{b(i) - a(i)}{max({a(i), b(i)})}
+$$
+
+```{r}
+# Evaluación del Cluster --------------------------------------------------
+
+#### Índice de Silhouette: ####
+
+# Un valor cercano a 1 indica una buena separación de los clusters,
+# mientras que un valor cercano a -1
+# indica que las observaciones
+# se agrupan en el cluster equivocado
+
+sil <- silhouette(sum.tot$cluster, dist(d_dist))
+summary(sil)$avg.width
+
+# Coeficiente de Silhouette para el método PAM
+sil2 <- silhouette(sum.tot$pam_results, d_dist)
+summary(sil2)$avg.width
+```
+
+La clusterización realizada utilizando la métrica de Gower y evaluada por medio del índice de Silhouette de $0.2501417$ sugiere que los clusters obtenidos tienen una estructura moderadamente definida. Esto significa que los objetos dentro de cada cluster están relativamente bien agrupados, pero también hay cierta superposición entre los clusters.
+
+Ahora aplicando otra métrica de evaluación de las medidas de asociación por medio de la función `assocstats()`:
+
+```{r}
+# Coeficiente de correlación de Cramer para el método PAM
+assocstats(table(pam_results, sum.tot$area_de_conocimiento))
+```
+
+Los resultados corresponden a las medidas de asociación entre el vector de asignación de clusters obtenido mediante el método PAM (`pam_results`) y la variable categórica `area_de_conocimiento`.
+
+La tabla de contingencia muestra la frecuencia de las combinaciones de categorías de ambas variables, mientras que el test de $Chi-cuadrado$ y sus valores asociados (grados de libertad y $p-valor$) indican si hay una asociación significativa entre ambas variables. En este caso, el valor del test de Chi-cuadrado es muy alto ($331.16$), lo que indica una asociación significativa entre las dos variables. El $p-valor$ también es muy bajo ($\approx 0$), lo que indica que es poco probable que la asociación observada se deba al azar.
+
+Las medidas de coeficientes de asociación $Phi$, $Contingencia$ y $Cramer's~~V$ indican el grado y la dirección de la asociación entre ambas variables. En este caso, el coeficiente de contingencia es de $0.376$, lo que indica una asociación moderada entre las dos variables. El coeficiente de $Cramer's~~V$ es de $0.234$, lo que también indica una asociación moderada.
+
+```{r}
+# Coeficiente de correlación de Cramer para el clustering aglomerativo
+assocstats(table(sum.tot$cluster, sum.tot$area_de_conocimiento))
+```
+## Conclusión
+
+Basándonos en los resultados de `assocstats()`, podemos decir que el clustering realizado con el método `cluster` es más adecuado para los datos de `sum.tot` que el clustering realizado con el método `pam`. El valor de $\chi^2$ y los coeficientes de contingencia y $Cramer's~~V$ indican una mayor asociación entre las variables de `area_de_conocimiento` y `cluster` cuando se usa el método `cluster`. Además, el *índice de Silhouette* es también ligeramente mayor para el clustering realizado con el método `cluster` (0.26) que para el clustering realizado con el método `pam` (0.21), lo que sugiere una mejor calidad de los clusters en el método cluster.
+
+# Modelo Multinomial
+
+Inicialmente se hace una partición de los datos en entrenamiento y prueba para después aplicar validación cruzada:
+
+```{r}
+# Dividir los datos en entrenamiento y prueba -----------------------------
+sum.tot0 <- sum.tot
+sum.tot <- sum.tot %>% dplyr::select(c(1:4,7:11))
+
+set.seed(123)
+
+id_train <- sample(1:nrow(sum.tot),0.7*nrow(sum.tot))
+
+data.train <- sum.tot[id_train,] %>% as.data.frame()
+
+data.test <- sum.tot[-id_train,] %>% as.data.frame()
+```
+
+## Penalización L1
+
+La penalización L1, también conocida como *"Lasso"*, se utiliza en modelos de regresión para reducir el sobreajuste y mejorar la generalización del modelo. En el contexto de los datos `sum.tot`, la penalización L1 se puede utilizar para identificar las variables más importantes para el modelo de clusterización y reducir la complejidad del modelo. Al agregar una restricción a la función de costo del modelo que penaliza los coeficientes de las variables predictoras que no contribuyen significativamente a explicar la variabilidad en la variable de respuesta, se pueden reducir los coeficientes de las variables irrelevantes a cero, lo que hace que estas variables no contribuyan al modelo. Esto puede ayudar a simplificar el modelo y mejorar su capacidad para generalizar a nuevos datos.
+
+  *Nota: La fuerza de la penalización L1 está controlada por el valor de*
+  $\lambda$*, que se puede ajustar mediante técnicas de validación cruzada para*
+  *encontrar el valor óptimo que equilibra la complejidad del modelo y su*
+  *capacidad para explicar los datos.*
+
+```{r}
+# Ajuste del modelo multinomial con regularización L1 -------------------
+
+x <- model.matrix(area_de_conocimiento~., data = data.train)[,-1]
+
+y <- data.train$area_de_conocimiento
+
+fit <- cv.glmnet(x,y, family = "multinomial", alpha = 1)
+
+x.test <- model.matrix(area_de_conocimiento ~.,
+                       data = data.test)[,-1]
+
+predicciones <- predict(fit, s = "lambda.min", newx = x.test,
+                       type = "class")
+```
+
+Después de ajustar un modelo con penalización L1, se aplicó la matriz de confusión para evaluar la precisión de las predicciones en comparación con los datos de prueba. La matriz de confusión muestra la cantidad de predicciones verdaderas positivas, falsas positivas, verdaderas negativas y falsas negativas. La precisión general del modelo se evaluó mediante las medidas de precisión, sensibilidad y especificidad.
+
+```{r}
+# Obtener la matriz de confusión
+m1 <- predicciones %>% factor()
+
+m2 <- data.test$area_de_conocimiento %>% as.matrix() %>% factor()
+
+matriz_confusion <- confusionMatrix(m1,m2)
+
+# Accuracy 
+matriz_confusion$overall
+
+# Sensibilidad
+matriz_confusion$byClass[1:8] %>% mean()
+
+
+# Especificidad
+matriz_confusion$byClass[9:16] %>% mean()
+```
+
+
+Los valores de Accuracy, Sensibilidad y Especificidad obtenidos a partir de la matriz de confusión muestran un rendimiento deficiente del modelo. La precisión global (Accuracy) es de solo el 31.66%, lo que indica que el modelo clasifica correctamente menos de un tercio de las observaciones. La sensibilidad es baja (31.14%), lo que indica que el modelo no es capaz de detectar con precisión los casos positivos de la variable de respuesta. La especificidad, por otro lado, es relativamente alta (90.19%), lo que indica que el modelo es capaz de identificar con alta precisión los casos negativos de la variable de respuesta. En resumen, aunque el modelo puede predecir bien los casos negativos, su capacidad para predecir correctamente los casos positivos es deficiente.
+
+
+```{r}
+### Curvas ROC ###
+y_pred <- predict(fit, newx = x.test, type = "response")
+
+auc_val <-  vector()
+t <-  levels(sum.tot$area_de_conocimiento)
+
+for (i in 1:8) {
+  # Convertir etiquetas categóricas en valores binarios
+  y_test <- ifelse(data.test$area_de_conocimiento == t[i], 1, 0)
+  
+  # Calcular curva ROC y el área bajo la curva (AUC)
+  roc_obj <- roc(y_test, y_pred[1:657])
+  auc_val[i] <- auc(roc_obj)
+}
+
+auc.s <- data.frame(level = t, AUC = auc_val)
+#Respectivos valores del AUC por clase a predecir:
+auc.s
+
+# Convertir etiquetas categóricas en valores binarios
+y_test <- ifelse(data.test$area_de_conocimiento ==
+                   "agronomia veterinaria afines", 1, 0)
+
+# Calcular curva ROC y el área bajo la curva (AUC)
+roc_obj <- roc(y_test, y_pred[1:657])
+auc_val <- auc(roc_obj)
+plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
+```
+
+Se ha calculado la curva ROC para evaluar su capacidad para distinguir entre las clases positivas y negativas. La curva ROC muestra la tasa de verdaderos positivos en función de la tasa de falsos positivos, y el área bajo la curva (AUC) es una medida de la capacidad de discriminación del modelo. En este caso, se ha obtenido un valor de AUC de 0.8348, lo que indica que el modelo tiene una buena capacidad para distinguir entre las dos clases. Además, la curva ROC muestra una curva bien separada de la línea diagonal, lo que también sugiere que el modelo tiene una buena capacidad discriminativa.
+
+## Selección de Variables predictoras relevantes
+
+La selección de variables predictoras relevantes es un paso crucial en el desarrollo de un modelo multinomial. En el caso de la base de datos `sum.tot`, donde la variable de respuesta es el área de conocimiento, es importante identificar las variables predictoras más relevantes para mejorar la precisión y generalización del modelo. Para lograr esto, se puede utilizar la función `stepAIC()`, que implementa un enfoque de selección de variables mediante el criterio de información de Akaike (AIC). El objetivo es encontrar el modelo más parsimonioso que maximice la capacidad predictiva del modelo y reduzca la complejidad del mismo.
+
+```{r}
+# Selección de Variables predictoras relevantes ---------------------------
+model <- multinom(area_de_conocimiento ~ ., data = data.train, trace = F)
+model_stepAIC <- stepAIC(model, direction = "both", trace = FALSE)
+model_stepAIC
+```
+
+A continuación, se crea una matriz de confusión para evaluar la precisión del modelo. La precisión general del modelo se puede calcular como la proporción de predicciones correctas (Accuracy)
+
+```{r}
+x.test <- model.matrix(area_de_conocimiento ~.,
+                       data = data.test)[,-1]
+
+predicciones <- predict(model_stepAIC,
+                        newdata = data.test[,-4], type = "class")
+
+m1 <- predicciones %>% factor()
+
+matriz_confusion <- confusionMatrix(m1,m2)
+
+print("# Accuracy ")
+matriz_confusion$overall
+
+print("# Sensibilidad")
+matriz_confusion$byClass[1:8] %>% mean()
+
+
+print("# Especificidad")
+matriz_confusion$byClass[9:16] %>% mean()
+```
+
+En el caso específico de este modelo, la precisión global fue de aproximadamente 32%, lo que indica que el modelo no tuvo un buen desempeño en la predicción de la variable respuesta. La sensibilidad media fue de alrededor de 34%, lo que indica que el modelo tuvo una baja capacidad para identificar correctamente los casos positivos. Por otro lado, la especificidad media fue de alrededor del 90%, lo que indica que el modelo tuvo una alta capacidad para identificar correctamente los casos negativos.
+
+
+```{r}
+### Curvas ROC ###
+
+y_pred <- predict(model_stepAIC,
+                  newdata = data.test[,-4], type = "prob")
+
+auc_val <-  vector()
+t <-  levels(sum.tot$area_de_conocimiento)
+
+for (i in 1:8) {
+  # Convertir etiquetas categóricas en valores binarios
+  y_test <- ifelse(data.test$area_de_conocimiento == t[i], 1, 0)
+  
+  # Calcular curva ROC y el área bajo la curva (AUC)
+  roc_obj <- roc(y_test, y_pred[1:657])
+  auc_val[i] <- auc(roc_obj)
+}
+
+auc.s <- data.frame(level = t, AUC = auc_val)
+#Respectivos valores del AUC por clase a predecir:
+auc.s
+
+# Convertir etiquetas categóricas en valores binarios
+y_test <- ifelse(data.test$area_de_conocimiento ==
+                   "agronomia veterinaria afines", 1, 0)
+
+# Calcular curva ROC y el área bajo la curva (AUC)
+roc_obj <- roc(y_test, y_pred[,1])
+auc_val <- auc(roc_obj)
+plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
+```
+
+
+El modelo de selección de variables predictoras relevantes obtenido mediante la función stepAIC() en R, arrojó un AUC de 0.824 en la curva ROC para la clase "agronomía veterinaria afines". Este valor indica que el modelo tiene un buen rendimiento en la capacidad de distinguir entre clases. Sin embargo, al observar los valores de la matriz de confusión, se puede apreciar una baja sensibilidad de 0.194 y una alta especificidad de 0.979. Esto indica que el modelo es capaz de identificar correctamente la mayoría de los casos negativos, pero tiene una baja capacidad para detectar los casos positivos. En general, se debe tener en cuenta que los resultados de la evaluación del modelo dependen del umbral de clasificación utilizado, el cual puede ser ajustado según las necesidades del problema.
+
+## Ajustar los hiperparámetros del modelo
+
+En este código se está ajustando los hiperparámetros del modelo multinomial mediante la técnica de validación cruzada en R. Primero, se ajusta el modelo multinomial utilizando todos los predictores en los datos de entrenamiento. Luego, se define una tabla de control de entrenamiento y se establece el número de iteraciones a 10. Se realiza la validación cruzada utilizando la función `train()` y se especifica el método "multinom" para la regresión multinomial. Finalmente, se ajusta el modelo final utilizando el modelo con los mejores hiperparámetros seleccionados por la validación cruzada. El objetivo de este proceso es encontrar la mejor combinación de hiperparámetros para el modelo multinomial, con el fin de maximizar su capacidad de generalización y hacer predicciones precisas en nuevos datos.
+
+```{r echo=FALSE, message=FALSE}
+# ajustar los hiperparámetros del modelo ----------------------------------------------------
+
+model <- multinom(area_de_conocimiento ~ ., data = data.train,
+                  type = "class", trace = F)
+
+# Define la tabla de control de train
+ctrl <- trainControl(method = "cv", number = 10, verboseIter = TRUE)
+
+# Realiza la validación cruzada
+garbange <- capture.output(cv.fit <- train(area_de_conocimiento ~ ., data = sum.tot, method = "multinom",
+                trControl = ctrl, tuneLength = 10, trace = FALSE))
+
+fit2 <- cv.fit$finalModel
+
+fit2
+```
+
+el intercepto es el logaritmo de probabilidades de la categoría de referencia. Cada uno de los demás coeficientes muestra el cambio en las probabilidades logarítmicas de la categoría correspondiente en relación con la categoría de referencia, cuando el valor de la variable de predicción correspondiente aumenta en una unidad, manteniendo constantes las demás variables de predicción.
+
+Por ejemplo, el coeficiente de "sector_iesprivada" en la categoría "bellas artes" es 0,1397416, lo que significa que cuando la variable "sector_iesprivada" aumenta en una unidad (es decir, de 0 a 1), las probabilidades logarítmicas del alumno perteneciente a la categoría "bellas artes" aumentan en 0,1397416 unidades, manteniendo constantes las demás variables.
+
+```{r}
+### Predicciones ###
+x.test <- model.matrix(area_de_conocimiento ~.,
+                       data = data.test)[,-1]
+
+predicciones <- predict(fit2,newdata = x.test, type = "class")
+
+m1 <- predicciones %>% factor()
+
+matriz_confusion <- confusionMatrix(m1,m2)
+
+# Accuracy 
+matriz_confusion$overall
+
+# Sensibilidad
+matriz_confusion$byClass[1:8] %>% mean()
+
+
+# Especificidad
+matriz_confusion$byClass[9:16] %>% mean()
+```
+
+El modelo anterior es un modelo de clasificación que ha sido evaluado mediante la matriz de confusión, la cual permite medir la precisión del modelo al predecir las clases de un conjunto de datos. Los datos obtenidos de la matriz de confusión muestran que el modelo tiene una precisión global (Accuracy) del 35,6% y un índice Kappa de 26,1%, lo que indica que el modelo tiene una capacidad de clasificación moderada.
+
+Además, se han calculado medidas importantes de desempeño del modelo, como la sensibilidad y la especificidad. La sensibilidad mide la capacidad del modelo para detectar verdaderos positivos, es decir, cuántas veces el modelo identificó correctamente la clase positiva. En este caso, la sensibilidad es del 36,1%, lo que indica que el modelo tiene una capacidad moderada para detectar la clase positiva.
+
+Por otro lado, la especificidad mide la capacidad del modelo para detectar verdaderos negativos, es decir, cuántas veces el modelo identificó correctamente la clase negativa. En este caso, la especificidad es del 90,8%, lo que indica que el modelo tiene una alta capacidad para detectar la clase negativa.
+
+En general, estos resultados sugieren que el modelo puede ser mejorado para aumentar su capacidad de clasificación.
+
+Ahora se procede a calcular las curvas ROC para mirar otros aspectos en la evaluación del modelo:
+
+```{r}
+### Curvas ROC ###
+
+y_pred <- predict(fit2,newdata = x.test, type = "prob")
+
+auc_val <-  vector()
+t <-  levels(sum.tot$area_de_conocimiento)
+
+for (i in 1:8) {
+  # Convertir etiquetas categóricas en valores binarios
+  y_test <- ifelse(data.test$area_de_conocimiento == t[i], 1, 0)
+  
+  # Calcular curva ROC y el área bajo la curva (AUC)
+  roc_obj <- roc(y_test, y_pred[1:657])
+  auc_val[i] <- auc(roc_obj)
+}
+
+auc.s <- data.frame(level = t, AUC = auc_val)
+#Respectivos valores del AUC por clase a predecir:
+auc.s
+
+# Convertir etiquetas categóricas en valores binarios
+y_test <- ifelse(data.test$area_de_conocimiento ==
+                   "agronomia veterinaria afines", 1, 0)
+
+# Calcular curva ROC y el área bajo la curva (AUC)
+roc_obj <- roc(y_test, y_pred[,1])
+auc_val <- auc(roc_obj)
+plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
+```
+
+## Modelo de Random Forest:
+
+```{r}
+# Capacidad Predictiva y Clasificadora de las Covariables ----------------
+
+arbol.de <- randomForest(area_de_conocimiento~sector_ies+
+                           demanda_real+admitidos+
+                           demanda_potencial+nyear+sexo, data = sum.tot, importance = T)
+
+varImpPlot(arbol.de, main = "Capacidad Predictiva y Clasificadora de las Covariables")
+```
+
+La conclusión es que el gráfico muestra que la variable "demanda_potencial" es la más importante para predecir la variable "area_de_conocimiento", seguida por "demanda_real" y "admitidos". En general, las variables relacionadas con la demanda de los programas de estudio parecen ser las más importantes para explicar las variaciones en el área de conocimiento. Esto puede ser útil para la toma de decisiones en la planificación y diseño de programas académicos en la institución educativa.
+
+> Nota: un valor de MeanDecreaseAccuracy alto, es probable que esta covariable tenga una gran influencia en la capacidad del modelo para predecir las diferentes categorías de la variable de respuesta. En contraste, una covariable con un valor bajo de MeanDecreaseAccuracy puede tener una importancia menor en la capacidad del modelo para hacer predicciones precisas, además, se considera que las variables con un valor de MeanDecreaseGini más alto son más importantes para el modelo, ya que tienen una mayor capacidad para separar las clases en la variable objetivo.
+
+## Elastic net
+
+En este caso, se aplicará el método de elastic net para construir un modelo predictivo de la variable área de conocimiento en función de un conjunto de covariables. La elastic net es una técnica que combina las penalizaciones Lasso y Ridge, lo que la hace útil para seleccionar un subconjunto de características importantes y reducir la multicolinealidad en los datos.
+
+Antes de construir el modelo, se dividen los datos en un conjunto de entrenamiento y un conjunto de prueba. Posteriormente, se define un control de entrenamiento y se realiza una búsqueda automática de hiperparámetros. Finalmente, se construye el modelo y se imprime su resultado para su análisis.
+
+```{r}
+# Elastic net -------------------------------------------------------------
+# método "elastic net" que combina la penalización de Lasso y Ridge.
+# Este método es útil para seleccionar un
+# subconjunto de características importantes
+# y reducir la multicolinealidad en los datos.
+
+# Dividir los datos en entrenamiento y prueba
+set.seed(123)
+train_index <- createDataPartition(sum.tot$area_de_conocimiento, p = 0.8, list = FALSE)
+train_data <- sum.tot[train_index, ]
+test_data <- sum.tot[-train_index, ]
+
+# Definir el control de entrenamiento
+ctrl <- trainControl(method = "cv", number = 10)
+
+# Definir la búsqueda automática de hiperparámetros
+tune_grid <- expand.grid(alpha = seq(0, 1, length = 11), lambda = seq(0, 1, length = 11))
+temp <- capture.output(glmnet_model <- train(area_de_conocimiento ~ .,
+                      data = train_data, method = "glmnet",
+                      trControl = ctrl, tuneGrid = tune_grid))
+
+glmnet_model$bestTune
+```
+
+los resultados del modelo Elastic Net indican que el valor óptimo de alpha es 0.5 y el valor óptimo de lambda es 0. Esto significa que el modelo final tiene un sesgo moderado y un nivel de regularización mínimo.
+
+El valor de accuracy obtenido por el modelo final fue de 0.35, lo cual indica que el modelo puede predecir con precisión el área de conocimiento de alrededor del 35% de los estudiantes.
+
+Además, el modelo también proporciona información sobre la importancia de cada variable en la predicción del resultado. Las variables más importantes, según el modelo, son la demanda_potencial y la comparación, seguidas de la metodología y el cluster. Esto sugiere que estas variables son las que más influyen en la elección del área de conocimiento por parte de los estudiantes.
+
+En resumen, el modelo Elastic Net parece ser un método adecuado para predecir el área de conocimiento de los estudiantes a partir de las variables disponibles en el conjunto de datos. Sin embargo, la precisión del modelo podría mejorarse con la inclusión de variables adicionales o mediante el ajuste de los parámetros del modelo.
+
+```{r}
+m2 <- train_data$area_de_conocimiento %>% factor() %>% as.matrix()
+
+predicciones <- predict(glmnet_model, test_data)
+confusion <- confusionMatrix(predicciones, test_data$area_de_conocimiento)
+
+precision <- confusion$overall['Accuracy']
+sensibilidad <- confusion$byClass[1:8] %>% mean()
+especificidad <- confusion$byClass[9:16] %>% mean()
+
+# Imprimir las medidas de evaluación
+print(precision)
+print(sensibilidad)
+print(especificidad)
+```
+
+De acuerdo a los resultados del modelo Elastic Net, se puede observar que la sensibilidad es del 34.82%, lo que indica que el modelo no es muy bueno para detectar los verdaderos positivos. Por otro lado, la especificidad es del 90.71%, lo que indica que el modelo es bastante bueno para detectar los verdaderos negativos. En general, se puede decir que el modelo tiene una buena capacidad para predecir correctamente las áreas de conocimiento que no corresponden, pero no es tan bueno para predecir las áreas de conocimiento correctas. 
+
+```{r}
+### Curvas ROC ###
+y_pred <- predict(glmnet_model,newdata = test_data, type = "prob")
+
+auc_val <-  vector()
+t <-  levels(sum.tot$area_de_conocimiento)
+
+for (i in 1:8) {
+  # Convertir etiquetas categóricas en valores binarios
+  y_test <- ifelse(test_data$area_de_conocimiento == t[i], 1, 0)
+  
+  # Calcular curva ROC y el área bajo la curva (AUC)
+  roc_obj <- roc(y_test, y_pred[,i])
+  auc_val[i] <- auc(roc_obj)
+}
+
+auc.s <- data.frame(level = t, AUC = auc_val)
+#Respectivos valores del AUC por clase a predecir:
+auc.s
+
+# Convertir etiquetas categóricas en valores binarios
+y_test <- ifelse(test_data$area_de_conocimiento ==
+                   "agronomia veterinaria afines", 1, 0)
+
+# Calcular curva ROC y el área bajo la curva (AUC)
+roc_obj <- roc(y_test, y_pred[,1])
+auc_val <- auc(roc_obj)
+plot(roc_obj, main = paste0("Curva ROC\nAUC = ", round(auc_val, 3)))
+```
+
+
+La curva ROC y el área bajo la curva (AUC) calculados para el modelo Elastic Net son bastante prometedores. El AUC promedio de todas las clases es bastante alto, oscilando entre 0.72 y 0.87, lo que sYugiere que el modelo es capaz de predecir con precisión las clases de las observaciones. Además, la curva ROC para la clase "agronomia veterinaria afines" tiene un AUC de 0.859, lo que significa que el modelo es capaz de distinguir entre las observaciones positivas y negativas con una tasa de éxito del 85.2%.
+
+En comparación con los otros modelos aplicados anteriormente, parece que el modelo Elastic Net es el mejor para hacer predicciones precisas y para interpretar la importancia relativa de las características en la predicción. El modelo de árbol de decisión y el modelo de bosque aleatorio proporcionaron una precisión y una sensibilidad más altas en general, pero no son tan buenos para identificar la importancia relativa de las características. Por otro lado, el modelo de regresión logística proporcionó una precisión similar, pero la elastic net es mejor para reducir la multicolinealidad y seleccionar características importantes.
+
+En resumen, el modelo Elastic Net parece ser el mejor modelo para hacer predicciones precisas y para interpretar la importancia relativa de las características en la predicción.

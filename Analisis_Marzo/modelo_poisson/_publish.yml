@@ -1,0 +1,4 @@
+- source: project
+  quarto-pub:
+    - id: 8fc68386-8cb9-4186-8994-a70e8c95118a
+      url: 'https://dvilla.quarto.pub/modelo-para-la-prediccion-del-ngraduados'

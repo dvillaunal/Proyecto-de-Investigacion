@@ -2,17 +2,7 @@
 title: "Modelo Poisson"
 ---
 
-# Introducción
-
-Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.
-
-El modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.
-
-Este sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística.
-
-# Lectura de los datos
-
-# Librerias necesarias
+## Librerias necesarias
 
 ```{python}
 import pandas as pd
@@ -21,8 +11,19 @@ import numpy as np
 import seaborn as sns
 from patsy import dmatrices
 import statsmodels.api as sm
+import warnings
 plt.style.use('ggplot')
 ```
+
+# Introducción
+
+Se presenta el reporte detallado que corresponde al mes de marzo, este documento tiene como objetivo aplicar técnicas estadísticas avanzadas para analizar los datos de graduados y otras variables relevantes como sector, metodología, área de conocimiento, semestre de la IES y otras variables que distinguen aun más los grupos como el sexo, año para tener unos conteos que son demanda real (inscritos), admitidos, demanda potencial (graduados).
+
+Siguiendo con la idea de los otros informes contamos con la agrupación de las bases de datos donde se eliminan variables que se cree que no aportan a la creación de modelos de predicción como el conteo de los matriculados, como el nombre de la institución (demasiados nombres que afectarían el modelo).
+
+El tratamiento de los datos y la creación de los modelos respectivos está hecha en python.
+
+# Lectura de los datos
 
 Se leen los datos de la agrupación total que contiene:
 
@@ -60,11 +61,13 @@ Ahora se precede a graficar los datos del conteo de la variable de respuesta (de
 ```{python}
 # Serie de tiempo de los datos de Demanda potencial
 ax = sns.relplot(kind='line', data=df, x = 'ano', y = 'demanda_potencial', hue='sexo',col='sector_ies', errorbar=None)
-ax.tick_params(axis='x', rotation=90)
+ax.tick_params(axis='x', rotation=45)
 plt.show()
 ```
 
 Se puede notar que en los dos casos ninguno cuenta con media constante.
+
+por lo cual esto puede ser un factor que afecte las predicciones ya que los datos a modelar cuentan con una tendencia crecienciente.
 
 # Partición de los datos
 
@@ -127,8 +130,8 @@ predicted_counts=predictions_summary_frame['mean']
 actual_counts = y_test['demanda_potencial']
 fig = plt.figure()
 fig.suptitle('Predichos vs Reales sobre el N° de graduados')
-predicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')
-actual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')
+actual, = plt.plot(X_test.index, actual_counts, 'go-', label='Actual counts')
+predicted, = plt.plot(X_test.index, predicted_counts, 'ro-', label='Predicted counts')
 plt.legend(handles=[predicted, actual])
 plt.show()
 ```
@@ -138,14 +141,45 @@ plt.show()
 
 ```{python}
 # Linear regression
-m, b = np.polyfit(predicted_counts,actual_counts, 1)
+m, b = np.polyfit(actual_counts, predicted_counts, 1)
 #Show scatter plot of Actual versus Predicted counts
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = "blue")
+fig, ax = plt.subplots(figsize=(7, 7))
+plt.ylim([0, 50000])
+plt.xlim([0, 50000])
+ax.scatter(y=predicted_counts, x=actual_counts, marker='.', color = "blue")
 ax.plot((0, 1), (0, 1), color = "gray", transform=ax.transAxes, ls = '--', label="1:1 line")
 ax.plot(actual_counts, m*actual_counts+b, color = "red", label = "regression fitted line")
-ax.set(ylabel ="Actual counts", xlabel = "Predicted counts",
-       title="Scatter plot of Actual versus Predicted counts")
+ax.set(xlabel ="Observed counts", ylabel = "Predicted counts",
+       title="Scatter plot of Observed versus Predicted counts")
 plt.legend()
+plt.show()
+```
+
+## Grafico de predicciones vs observados por año
+
+```{python}
+warnings.filterwarnings("ignore")
+# Nuevo data frame agrupando por año
+dfa = pd.DataFrame({'anio': df.ano[384:480],
+              'observados': df.demanda_potencial[384:480],
+              'predicciones':predicted_counts}).groupby('anio', as_index=False)['observados', 'predicciones'].agg(np.sum)
+
+# Quitar observaciones con cero:
+mask = (dfa['observados'] == 0) | (dfa['predicciones'] == 0)
+dfa = dfa.loc[~mask]
+
+# Pivot longer de dfa
+dfa = pd.melt(dfa, id_vars = 'anio', value_vars=['observados', 'predicciones'])
+dfa.rename(columns= {'variable': 'demanda_potencial', 'value': 'n_graduados'}, inplace=True)
+dfa['n_graduados'] = np.round(dfa['n_graduados'], 3)
+
+
+# Grafico de Predicciones vs Observaciones por año
+ax = sns.lineplot(data=dfa, x = 'anio', y = 'n_graduados', hue='demanda_potencial',
+                  style = 'demanda_potencial', errorbar=None, markers=True)
+ax.tick_params(axis='x', rotation=45)
+plt.xlabel('Año')
+plt.ylabel('N° de Graduados')
+plt.xticks(dfa.anio)
 plt.show()
 ```

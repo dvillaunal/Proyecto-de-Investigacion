@@ -1,72 +1,65 @@
 [
   {
-    "objectID": "index.html",
-    "href": "index.html",
-    "title": "Modelo Poisson (Proyecto de Investigación)",
-    "section": "",
-    "text": "Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.\nEl modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.\nEste sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística."
-  },
-  {
-    "objectID": "about.html",
-    "href": "about.html",
-    "title": "About",
-    "section": "",
-    "text": "About this site"
-  },
-  {
-    "objectID": "index.html#verificación-de-los-valores-reales-vs-los-predichos",
-    "href": "index.html#verificación-de-los-valores-reales-vs-los-predichos",
-    "title": "Modelo Poisson (Proyecto de Investigación)",
-    "section": "Verificación de los valores reales vs los predichos",
-    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
-  },
-  {
-    "objectID": "index.html#grafico-de-puntos-reales-vs-predichos",
-    "href": "index.html#grafico-de-puntos-reales-vs-predichos",
-    "title": "Modelo Poisson (Proyecto de Investigación)",
-    "section": "Grafico de puntos reales vs predichos",
-    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n#Show scatter plot of Actual versus Predicted counts\nplt.clf()\nfig = plt.figure()\nfig.suptitle('Scatter plot of Actual versus Predicted counts')\nplt.scatter(x=predicted_counts, y=actual_counts, marker='.')\nplt.xlabel('Predicted counts')\nplt.ylabel('Actual counts')\nplt.show()\n\n\n&lt;Figure size 672x480 with 0 Axes&gt;"
-  },
-  {
     "objectID": "modelp.html",
     "href": "modelp.html",
     "title": "Modelo Poisson",
     "section": "",
-    "text": "Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.\nEl modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.\nEste sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística."
+    "text": "Code\nimport pandas as pd\nfrom matplotlib import pyplot as plt\nimport numpy as np\nimport seaborn as sns\nfrom patsy import dmatrices\nimport statsmodels.api as sm\nimport warnings\nplt.style.use('ggplot')"
   },
   {
     "objectID": "modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
     "href": "modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
     "title": "Modelo Poisson",
     "section": "Verificación de los valores reales vs los predichos",
-    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
+    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\nactual, = plt.plot(X_test.index, actual_counts, 'go-', label='Actual counts')\npredicted, = plt.plot(X_test.index, predicted_counts, 'ro-', label='Predicted counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
   },
   {
     "objectID": "modelp.html#grafico-de-puntos-reales-vs-predichos",
     "href": "modelp.html#grafico-de-puntos-reales-vs-predichos",
     "title": "Modelo Poisson",
     "section": "Grafico de puntos reales vs predichos",
-    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n# Linear regression\nm, b = np.polyfit(predicted_counts,actual_counts, 1)\n#Show scatter plot of Actual versus Predicted counts\nfig, ax = plt.subplots(figsize=(8, 8))\nax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = \"blue\")\nax.plot((0, 1), (0, 1), color = \"gray\", transform=ax.transAxes, ls = '--', label=\"1:1 line\")\nax.plot(actual_counts, m*actual_counts+b, color = \"red\", label = \"regression fitted line\")\nax.set(ylabel =\"Actual counts\", xlabel = \"Predicted counts\",\n       title=\"Scatter plot of Actual versus Predicted counts\")\nplt.legend()\nplt.show()"
+    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n# Linear regression\nm, b = np.polyfit(actual_counts, predicted_counts, 1)\n#Show scatter plot of Actual versus Predicted counts\nfig, ax = plt.subplots(figsize=(7, 7))\nplt.ylim([0, 50000])\nplt.xlim([0, 50000])\nax.scatter(y=predicted_counts, x=actual_counts, marker='.', color = \"blue\")\nax.plot((0, 1), (0, 1), color = \"gray\", transform=ax.transAxes, ls = '--', label=\"1:1 line\")\nax.plot(actual_counts, m*actual_counts+b, color = \"red\", label = \"regression fitted line\")\nax.set(xlabel =\"Observed counts\", ylabel = \"Predicted counts\",\n       title=\"Scatter plot of Observed versus Predicted counts\")\nplt.legend()\nplt.show()"
+  },
+  {
+    "objectID": "board.html",
+    "href": "board.html",
+    "title": "Introducción",
+    "section": "",
+    "text": "Se presenta el reporte detallado que corresponde al mes de marzo, este documento tiene como objetivo aplicar técnicas estadísticas avanzadas para analizar los datos de graduados y otras variables relevantes como sector, metodología, área de conocimiento, semestre de la IES y otras variables que distinguen aun más los grupos como el sexo, año para tener unos conteos que son demanda real (inscritos), admitidos, demanda potencial (graduados).\nSiguiendo con la idea de los otros informes contamos con la agrupación de las bases de datos donde se eliminan variables que se cree que no aportan a la creación de modelos de predicción como el conteo de los matriculados, como el nombre de la institución (demasiados nombres que afectarían el modelo).\nEl tratamiento de los datos y la creación de los modelos respectivos está hecha en python."
+  },
+  {
+    "objectID": "board.html#librerias-necesarias",
+    "href": "board.html#librerias-necesarias",
+    "title": "Introducción",
+    "section": "Librerias necesarias",
+    "text": "Librerias necesarias\n\n\nCode\nimport pandas as pd\nfrom matplotlib import pyplot as plt\nimport numpy as np\nimport seaborn as sns\nfrom patsy import dmatrices\nimport statsmodels.api as sm\nimport warnings\nplt.style.use('ggplot')\n\n\nSe leen los datos de la agrupación total que contiene:\n\nn° de inscritos\nn° de admitidos\nn° de graduados\n\n\n\nCode\nruta = \"/home/daniel/OneDrive/Documentos (OneDrive-UNAL)/pro_inv/Proyecto-de-Investigacion/Analisis_Marzo/BD_agrupada.xlsx\"\n\ndf0 = pd.read_excel(ruta)\ndf0['ano'] = df0['ano'].astype(\"category\")\n\n\nAntes de analizar los datos, necesitamos observar que el conteo a utilizar como variable de respuesta \\(Y\\) cumplan con el supuesto que la media (nuestro parametro \\(\\lambda\\)) sea constante, es decir que los valores varien frente a una valor\n\n\nCode\n# Columnas a cosiderar\nv = list()\nfor i in [0,1,2,3,5,6,7,8,9]:\n    v.append(list(df0.columns.values)[i])\n\n# Nueva BD agrupando por nyear\ndf = df0[v].groupby(['ano', 'sector_ies', 'sexo', 'area_de_conocimiento'], as_index=False)[v[6:9]].agg(np.sum)\n\n\nUna vez se agruparon los datos por las variables pertinetes tenemos que nuestra nueva BD es:\n\n\nCode\ndf.head(5)\n\n\n\n\n\n\n\n\n\nano\nsector_ies\nsexo\narea_de_conocimiento\ndemanda_real\nadmitidos\ndemanda_potencial\n\n\n\n\n0\n2007\noficial\nfemenino\nagronomia veterinaria afines\n6388\n2371\n706\n\n\n1\n2007\noficial\nfemenino\nbellas artes\n6425\n1392\n399\n\n\n2\n2007\noficial\nfemenino\nciencias educacion\n32780\n16150\n4832\n\n\n3\n2007\noficial\nfemenino\nciencias salud\n55169\n6975\n2982\n\n\n4\n2007\noficial\nfemenino\nciencias sociales humanas\n42506\n12549\n4073\n\n\n\n\n\n\n\nAhora se precede a graficar los datos del conteo de la variable de respuesta (demanda potencial) por algún tipo de varible a agrupar, en este caso se toma por sexo según el caracter de la IES.\n\n\nCode\n# Serie de tiempo de los datos de Demanda potencial\nax = sns.relplot(kind='line', data=df, x = 'ano', y = 'demanda_potencial', hue='sexo',col='sector_ies', errorbar=None)\nax.tick_params(axis='x', rotation=90)\nplt.show()\n\n\n\n\n\nSe puede notar que en los dos casos ninguno cuenta con media constante."
   },
   {
     "objectID": "modelc.html",
     "href": "modelc.html",
-    "title": "About",
+    "title": "Modelo de Classificación",
     "section": "",
     "text": "About this site"
   },
   {
-    "objectID": "board_modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
-    "href": "board_modelp.html#verificación-de-los-valores-reales-vs-los-predichos",
-    "title": "Untitled",
-    "section": "Verificación de los valores reales vs los predichos",
-    "text": "Verificación de los valores reales vs los predichos\n\n\nCode\n#Mlot the predicted counts versus the actual counts for the test data.\npredicted_counts=predictions_summary_frame['mean']\nactual_counts = y_test['demanda_potencial']\nfig = plt.figure()\nfig.suptitle('Predichos vs Reales sobre el N° de graduados')\npredicted, = plt.plot(X_test.index, predicted_counts, 'go-', label='Predicted counts')\nactual, = plt.plot(X_test.index, actual_counts, 'ro-', label='Actual counts')\nplt.legend(handles=[predicted, actual])\nplt.show()"
+    "objectID": "modelp.html#librerias-necesarias",
+    "href": "modelp.html#librerias-necesarias",
+    "title": "Modelo Poisson",
+    "section": "",
+    "text": "Code\nimport pandas as pd\nfrom matplotlib import pyplot as plt\nimport numpy as np\nimport seaborn as sns\nfrom patsy import dmatrices\nimport statsmodels.api as sm\nimport warnings\nplt.style.use('ggplot')"
   },
   {
-    "objectID": "board_modelp.html#grafico-de-puntos-reales-vs-predichos",
-    "href": "board_modelp.html#grafico-de-puntos-reales-vs-predichos",
-    "title": "Untitled",
-    "section": "Grafico de puntos reales vs predichos",
-    "text": "Grafico de puntos reales vs predichos\n\n\nCode\n# Linear regression\nm, b = np.polyfit(predicted_counts,actual_counts, 1)\n#Show scatter plot of Actual versus Predicted counts\nfig, ax = plt.subplots(figsize=(10, 10))\nax.scatter(x=predicted_counts, y=actual_counts, marker='.', color = \"blue\")\nax.plot((0, 1), (0, 1), color = \"gray\", transform=ax.transAxes, ls = '--', label=\"1:1 line\")\nax.plot(actual_counts, m*actual_counts+b, color = \"red\", label = \"regression fitted line\")\nax.set(ylabel =\"Actual counts\", xlabel = \"Predicted counts\",\n       title=\"Scatter plot of Actual versus Predicted counts\")\nplt.legend()\nplt.show()"
+    "objectID": "modelp.html#grafico-de-predicciones-vs-observados-por-año",
+    "href": "modelp.html#grafico-de-predicciones-vs-observados-por-año",
+    "title": "Modelo Poisson",
+    "section": "Grafico de predicciones vs observados por año",
+    "text": "Grafico de predicciones vs observados por año\n\n\nCode\nwarnings.filterwarnings(\"ignore\")\n# Nuevo data frame agrupando por año\ndfa = pd.DataFrame({'anio': df.ano[384:480],\n              'observados': df.demanda_potencial[384:480],\n              'predicciones':predicted_counts}).groupby('anio', as_index=False)['observados', 'predicciones'].agg(np.sum)\n\n# Quitar observaciones con cero:\nmask = (dfa['observados'] == 0) | (dfa['predicciones'] == 0)\ndfa = dfa.loc[~mask]\n\n# Pivot longer de dfa\ndfa = pd.melt(dfa, id_vars = 'anio', value_vars=['observados', 'predicciones'])\ndfa.rename(columns= {'variable': 'demanda_potencial', 'value': 'n_graduados'}, inplace=True)\ndfa['n_graduados'] = np.round(dfa['n_graduados'], 3)\n\n\n# Grafico de Predicciones vs Observaciones por año\nax = sns.lineplot(data=dfa, x = 'anio', y = 'n_graduados', hue='demanda_potencial',\n                  style = 'demanda_potencial', errorbar=None, markers=True)\nax.tick_params(axis='x', rotation=45)\nplt.xlabel('Año')\nplt.ylabel('N° de Graduados')\nplt.xticks(dfa.anio)\nplt.show()"
+  },
+  {
+    "objectID": "board.html#grafico-de-predicciones-vs-observados-por-año",
+    "href": "board.html#grafico-de-predicciones-vs-observados-por-año",
+    "title": "Introducción",
+    "section": "Grafico de predicciones vs observados por año",
+    "text": "Grafico de predicciones vs observados por año\n\n\nCode\nwarnings.filterwarnings(\"ignore\")\n# Nuevo data frame agrupando por año\ndfa = pd.DataFrame({'anio': df.ano[384:480],\n              'observados': df.demanda_potencial[384:480],\n              'predicciones':predicted_counts}).groupby('anio', as_index=False)['observados', 'predicciones'].agg(np.sum)\n\n# Quitar observaciones con cero:\nmask = (dfa['observados'] == 0) | (dfa['predicciones'] == 0)\ndfa = dfa.loc[~mask]\n\n# Pivot longer de dfa\ndfa = pd.melt(dfa, id_vars = 'anio', value_vars=['observados', 'predicciones'])\ndfa.rename(columns= {'variable': 'demanda_potencial', 'value': 'n_graduados'}, inplace=True)\ndfa['n_graduados'] = np.round(dfa['n_graduados'], 3)\n\n\n# Grafico de Predicciones vs Observaciones por año\nax = sns.lineplot(data=dfa, x = 'anio', y = 'n_graduados', hue='demanda_potencial',\n                  style = 'demanda_potencial', errorbar=None, markers=True)\nax.tick_params(axis='x', rotation=45)\nplt.xlabel('Año')\nplt.ylabel('N° de Graduados')\nplt.xticks(dfa.anio)\nplt.show()"
   }
 ]

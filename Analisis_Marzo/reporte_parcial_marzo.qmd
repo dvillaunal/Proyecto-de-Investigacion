@@ -37,7 +37,6 @@ require(randomForest)
 require(rsample)
 require(fpc)
 require(vcd)
-#3ss
 ```
 
 Lectura de la base de datos, donde se contienen los *subsets* creados en el mes de febrero:
@@ -192,10 +191,6 @@ Las medidas de coeficientes de asociación $Phi$, $Contingencia$ y $Cramer's~~V$
 # Coeficiente de correlación de Cramer para el clustering aglomerativo
 assocstats(table(sum.tot$cluster, sum.tot$area_de_conocimiento))
 ```
-
-En este caso, los resultados indican que existe una asociación significativa entre los clusters y las áreas de conocimiento de los estudiantes. El valor del estadístico $\chi^2$ es menor que en el caso anterior, lo que sugiere una asociación más fuerte entre los clusters y las áreas de conocimiento. El valor del coeficiente de contingencia también es mayor, lo que indica que la fuerza de la asociación es mayor. Sin embargo, el valor del coeficiente de $Cramer's~~V$ es menor, lo que sugiere que el tamaño del efecto es más pequeño que en el caso anterior. En general, ambos métodos muestran una asociación significativa entre los clusters y las áreas de conocimiento, pero el segundo método parece ser ligeramente mejor en términos de fuerza de asociación.
-
-
 ## Conclusión
 
 Basándonos en los resultados de `assocstats()`, podemos decir que el clustering realizado con el método `cluster` es más adecuado para los datos de `sum.tot` que el clustering realizado con el método `pam`. El valor de $\chi^2$ y los coeficientes de contingencia y $Cramer's~~V$ indican una mayor asociación entre las variables de `area_de_conocimiento` y `cluster` cuando se usa el método `cluster`. Además, el *índice de Silhouette* es también ligeramente mayor para el clustering realizado con el método `cluster` (0.26) que para el clustering realizado con el método `pam` (0.21), lo que sugiere una mejor calidad de los clusters en el método cluster.

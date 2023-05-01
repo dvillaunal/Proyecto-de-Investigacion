@@ -2,13 +2,13 @@ project:
   type: website
 
 website:
-  title: "Modelo para la Predicción del n° de graduados"
+  title: "Modelo de Clasificación"
   navbar:
     left:
       - href: modelp.qmd
         text: modelo poisson
       - href: modelc.qmd
-        text: modelo de clasificación
+        text: Ajuste del modelo
 
 format:
   html:

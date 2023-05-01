@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>Modelo para la Predicción del n° de graduados - Modelo Poisson</title>
+<title>Modelo de Clasificación - Modelo Poisson</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -110,7 +110,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <div class="navbar-container container-fluid">
       <div class="navbar-brand-container">
     <a class="navbar-brand" href="./index.html">
-    <span class="navbar-title">Modelo para la Predicción del n° de graduados</span>
+    <span class="navbar-title">Modelo de Clasificación</span>
     </a>
   </div>
             <div id="quarto-search" class="" title="Search"></div>
@@ -125,7 +125,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   </li>  
   <li class="nav-item">
     <a class="nav-link" href="./modelc.html" rel="" target="">
- <span class="menu-text">modelo de clasificación</span></a>
+ <span class="menu-text">Ajuste del modelo</span></a>
   </li>  
 </ul>
             <div class="quarto-navbar-tools ms-auto">
@@ -143,14 +143,15 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     <h2 id="toc-title">Contenido</h2>
    
   <ul>
-  <li><a href="#introducción" id="toc-introducción" class="nav-link active" data-scroll-target="#introducción">Introducción</a></li>
+  <li><a href="#librerias-necesarias" id="toc-librerias-necesarias" class="nav-link active" data-scroll-target="#librerias-necesarias">Librerias necesarias</a></li>
+  <li><a href="#introducción" id="toc-introducción" class="nav-link" data-scroll-target="#introducción">Introducción</a></li>
   <li><a href="#lectura-de-los-datos" id="toc-lectura-de-los-datos" class="nav-link" data-scroll-target="#lectura-de-los-datos">Lectura de los datos</a></li>
-  <li><a href="#librerias-necesarias" id="toc-librerias-necesarias" class="nav-link" data-scroll-target="#librerias-necesarias">Librerias necesarias</a></li>
   <li><a href="#partición-de-los-datos" id="toc-partición-de-los-datos" class="nav-link" data-scroll-target="#partición-de-los-datos">Partición de los datos</a></li>
   <li><a href="#predicciones" id="toc-predicciones" class="nav-link" data-scroll-target="#predicciones">Predicciones</a>
   <ul class="collapse">
   <li><a href="#verificación-de-los-valores-reales-vs-los-predichos" id="toc-verificación-de-los-valores-reales-vs-los-predichos" class="nav-link" data-scroll-target="#verificación-de-los-valores-reales-vs-los-predichos">Verificación de los valores reales vs los predichos</a></li>
   <li><a href="#grafico-de-puntos-reales-vs-predichos" id="toc-grafico-de-puntos-reales-vs-predichos" class="nav-link" data-scroll-target="#grafico-de-puntos-reales-vs-predichos">Grafico de puntos reales vs predichos</a></li>
+  <li><a href="#grafico-de-predicciones-vs-observados-por-año" id="toc-grafico-de-predicciones-vs-observados-por-año" class="nav-link" data-scroll-target="#grafico-de-predicciones-vs-observados-por-año">Grafico de predicciones vs observados por año</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -175,18 +176,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 
 </header>
 
-<section id="introducción" class="level1">
-<h1>Introducción</h1>
-<p>Bienvenidos al sitio web dedicado al análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Este proyecto tiene como objetivo aplicar una técnica estadística avanzada para analizar los datos de graduados y otras variables relevantes como sector_ies, comparación, metodología, área_de_conocimiento, semestre, año, sexo, demanda_real y admitidos.</p>
-<p>El modelo de regresión Poisson es una herramienta estadística muy poderosa que permite modelar y analizar datos que se presentan en forma de conteos. En este caso, los datos de graduados se presentan como conteos, por lo que el modelo de regresión Poisson es una herramienta adecuada para analizar estos datos.</p>
-<p>Este sitio web está diseñado para proporcionar información sobre el proceso de análisis de datos de graduados utilizando el modelo de regresión Poisson en Python. Además, se proporcionarán recursos para ayudar a los estudiantes e investigadores a comprender los conceptos y la aplicación práctica de esta técnica estadística.</p>
-</section>
-<section id="lectura-de-los-datos" class="level1">
-<h1>Lectura de los datos</h1>
-</section>
-<section id="librerias-necesarias" class="level1">
-<h1>Librerias necesarias</h1>
-<div class="cell" data-execution_count="1">
+<section id="librerias-necesarias" class="level2">
+<h2 class="anchored" data-anchor-id="librerias-necesarias">Librerias necesarias</h2>
+<div class="cell" data-execution_count="2">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
@@ -195,16 +187,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb1-4"><a href="#cb1-4"></a><span class="im">import</span> seaborn <span class="im">as</span> sns</span>
 <span id="cb1-5"><a href="#cb1-5"></a><span class="im">from</span> patsy <span class="im">import</span> dmatrices</span>
 <span id="cb1-6"><a href="#cb1-6"></a><span class="im">import</span> statsmodels.api <span class="im">as</span> sm</span>
-<span id="cb1-7"><a href="#cb1-7"></a>plt.style.use(<span class="st">'ggplot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-7"><a href="#cb1-7"></a><span class="im">import</span> warnings</span>
+<span id="cb1-8"><a href="#cb1-8"></a>plt.style.use(<span class="st">'ggplot'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 </div>
+</section>
+<section id="introducción" class="level1">
+<h1>Introducción</h1>
+<p>Se presenta el reporte detallado que corresponde al mes de marzo, este documento tiene como objetivo aplicar técnicas estadísticas avanzadas para analizar los datos de graduados y otras variables relevantes como sector, metodología, área de conocimiento, semestre de la IES y otras variables que distinguen aun más los grupos como el sexo, año para tener unos conteos que son demanda real (inscritos), admitidos, demanda potencial (graduados).</p>
+<p>Siguiendo con la idea de los otros informes contamos con la agrupación de las bases de datos donde se eliminan variables que se cree que no aportan a la creación de modelos de predicción como el conteo de los matriculados, como el nombre de la institución (demasiados nombres que afectarían el modelo).</p>
+<p>El tratamiento de los datos y la creación de los modelos respectivos está hecha en python.</p>
+</section>
+<section id="lectura-de-los-datos" class="level1">
+<h1>Lectura de los datos</h1>
 <p>Se leen los datos de la agrupación total que contiene:</p>
 <ul>
 <li>n° de inscritos</li>
 <li>n° de admitidos</li>
 <li>n° de graduados</li>
 </ul>
-<div class="cell" data-execution_count="2">
+<div class="cell" data-execution_count="3">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1"></a>ruta <span class="op">=</span> <span class="st">"/home/daniel/OneDrive/Documentos (OneDrive-UNAL)/pro_inv/Proyecto-de-Investigacion/Analisis_Marzo/BD_agrupada.xlsx"</span></span>
@@ -214,7 +216,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>Antes de analizar los datos, necesitamos observar que el conteo a utilizar como variable de respuesta <span class="math inline">\(Y\)</span> cumplan con el supuesto que la media (nuestro parametro <span class="math inline">\(\lambda\)</span>) sea constante, es decir que los valores varien frente a una valor</p>
-<div class="cell" data-execution_count="3">
+<div class="cell" data-execution_count="4">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1"></a><span class="co"># Columnas a cosiderar</span></span>
@@ -227,7 +229,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </details>
 </div>
 <p>Una vez se agruparon los datos por las variables pertinetes tenemos que nuestra nueva BD es:</p>
-<div class="cell" data-execution_count="4">
+<div class="cell" data-execution_count="5">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1"></a>df.head(<span class="dv">5</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
@@ -307,7 +309,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Ahora se precede a graficar los datos del conteo de la variable de respuesta (demanda potencial) por algún tipo de varible a agrupar, en este caso se toma por sexo según el caracter de la IES.</p>
-<div class="cell" data-execution_count="5">
+<div class="cell" data-execution_count="6">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1"></a><span class="co"># Serie de tiempo de los datos de Demanda potencial</span></span>
@@ -320,11 +322,12 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Se puede notar que en los dos casos ninguno cuenta con media constante.</p>
+<p>por lo cual esto puede ser un factor que afecte las predicciones ya que los datos a modelar cuentan con una tendencia crecienciente.</p>
 </section>
 <section id="partición-de-los-datos" class="level1">
 <h1>Partición de los datos</h1>
 <p>se crean los datos de entramiento y test de los datos, teniendo en cuenta que estos se parten de forma secuencial, se toma el 80% de los datos de arriba hacia abajo dejando el 20% al conjunto de testeo.</p>
-<div class="cell" data-execution_count="6">
+<div class="cell" data-execution_count="7">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1"></a>df_train <span class="op">=</span> df.iloc[<span class="dv">0</span>:<span class="dv">384</span>,:]</span>
@@ -338,7 +341,7 @@ Testing data set length=96</code></pre>
 </div>
 </div>
 <p>Ahora creamos la formula para aplicar al modelo:</p>
-<div class="cell" data-execution_count="7">
+<div class="cell" data-execution_count="8">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1"></a>expr <span class="op">=</span> <span class="st">"demanda_potencial~ano+sector_ies+sexo+area_de_conocimiento+demanda_real+admitidos"</span></span>
@@ -349,7 +352,7 @@ Testing data set length=96</code></pre>
 </details>
 </div>
 <p>Se ajusta el modelo con las matrices de diseño creadas:</p>
-<div class="cell" data-execution_count="8">
+<div class="cell" data-execution_count="9">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1"></a>poisson_training_results <span class="op">=</span> sm.GLM(y_train, X_train, family<span class="op">=</span>sm.families.Poisson()).fit()</span>
@@ -364,8 +367,8 @@ Model:                            GLM   Df Residuals:                      361
 Model Family:                 Poisson   Df Model:                           22
 Link Function:                    Log   Scale:                          1.0000
 Method:                          IRLS   Log-Likelihood:            -1.1207e+05
-Date:                Mon, 03 Apr 2023   Deviance:                   2.2024e+05
-Time:                        18:02:27   Pearson chi2:                 2.23e+05
+Date:                Fri, 14 Apr 2023   Deviance:                   2.2024e+05
+Time:                        11:01:50   Pearson chi2:                 2.23e+05
 No. Iterations:                     6   Pseudo R-squ. (CS):              1.000
 Covariance Type:            nonrobust                                         
 =====================================================================================================================================
@@ -403,7 +406,7 @@ admitidos                                                          2.112e-05    
 </section>
 <section id="predicciones" class="level1">
 <h1>Predicciones</h1>
-<div class="cell" data-execution_count="9">
+<div class="cell" data-execution_count="10">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1"></a>poisson_predictions <span class="op">=</span> poisson_training_results.get_prediction(X_test)</span>
@@ -447,7 +450,7 @@ Error de Predicción:  -5089.491927867554
 </div>
 <section id="verificación-de-los-valores-reales-vs-los-predichos" class="level2">
 <h2 class="anchored" data-anchor-id="verificación-de-los-valores-reales-vs-los-predichos">Verificación de los valores reales vs los predichos</h2>
-<div class="cell" data-execution_count="10">
+<div class="cell" data-execution_count="11">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1"></a><span class="co">#Mlot the predicted counts versus the actual counts for the test data.</span></span>
@@ -455,8 +458,8 @@ Error de Predicción:  -5089.491927867554
 <span id="cb13-3"><a href="#cb13-3"></a>actual_counts <span class="op">=</span> y_test[<span class="st">'demanda_potencial'</span>]</span>
 <span id="cb13-4"><a href="#cb13-4"></a>fig <span class="op">=</span> plt.figure()</span>
 <span id="cb13-5"><a href="#cb13-5"></a>fig.suptitle(<span class="st">'Predichos vs Reales sobre el N° de graduados'</span>)</span>
-<span id="cb13-6"><a href="#cb13-6"></a>predicted, <span class="op">=</span> plt.plot(X_test.index, predicted_counts, <span class="st">'go-'</span>, label<span class="op">=</span><span class="st">'Predicted counts'</span>)</span>
-<span id="cb13-7"><a href="#cb13-7"></a>actual, <span class="op">=</span> plt.plot(X_test.index, actual_counts, <span class="st">'ro-'</span>, label<span class="op">=</span><span class="st">'Actual counts'</span>)</span>
+<span id="cb13-6"><a href="#cb13-6"></a>actual, <span class="op">=</span> plt.plot(X_test.index, actual_counts, <span class="st">'go-'</span>, label<span class="op">=</span><span class="st">'Actual counts'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7"></a>predicted, <span class="op">=</span> plt.plot(X_test.index, predicted_counts, <span class="st">'ro-'</span>, label<span class="op">=</span><span class="st">'Predicted counts'</span>)</span>
 <span id="cb13-8"><a href="#cb13-8"></a>plt.legend(handles<span class="op">=</span>[predicted, actual])</span>
 <span id="cb13-9"><a href="#cb13-9"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
@@ -467,23 +470,60 @@ Error de Predicción:  -5089.491927867554
 </section>
 <section id="grafico-de-puntos-reales-vs-predichos" class="level2">
 <h2 class="anchored" data-anchor-id="grafico-de-puntos-reales-vs-predichos">Grafico de puntos reales vs predichos</h2>
-<div class="cell" data-execution_count="11">
+<div class="cell" data-execution_count="12">
 <details>
 <summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1"></a><span class="co"># Linear regression</span></span>
-<span id="cb14-2"><a href="#cb14-2"></a>m, b <span class="op">=</span> np.polyfit(predicted_counts,actual_counts, <span class="dv">1</span>)</span>
+<span id="cb14-2"><a href="#cb14-2"></a>m, b <span class="op">=</span> np.polyfit(actual_counts, predicted_counts, <span class="dv">1</span>)</span>
 <span id="cb14-3"><a href="#cb14-3"></a><span class="co">#Show scatter plot of Actual versus Predicted counts</span></span>
-<span id="cb14-4"><a href="#cb14-4"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">8</span>, <span class="dv">8</span>))</span>
-<span id="cb14-5"><a href="#cb14-5"></a>ax.scatter(x<span class="op">=</span>predicted_counts, y<span class="op">=</span>actual_counts, marker<span class="op">=</span><span class="st">'.'</span>, color <span class="op">=</span> <span class="st">"blue"</span>)</span>
-<span id="cb14-6"><a href="#cb14-6"></a>ax.plot((<span class="dv">0</span>, <span class="dv">1</span>), (<span class="dv">0</span>, <span class="dv">1</span>), color <span class="op">=</span> <span class="st">"gray"</span>, transform<span class="op">=</span>ax.transAxes, ls <span class="op">=</span> <span class="st">'--'</span>, label<span class="op">=</span><span class="st">"1:1 line"</span>)</span>
-<span id="cb14-7"><a href="#cb14-7"></a>ax.plot(actual_counts, m<span class="op">*</span>actual_counts<span class="op">+</span>b, color <span class="op">=</span> <span class="st">"red"</span>, label <span class="op">=</span> <span class="st">"regression fitted line"</span>)</span>
-<span id="cb14-8"><a href="#cb14-8"></a>ax.<span class="bu">set</span>(ylabel <span class="op">=</span><span class="st">"Actual counts"</span>, xlabel <span class="op">=</span> <span class="st">"Predicted counts"</span>,</span>
-<span id="cb14-9"><a href="#cb14-9"></a>       title<span class="op">=</span><span class="st">"Scatter plot of Actual versus Predicted counts"</span>)</span>
-<span id="cb14-10"><a href="#cb14-10"></a>plt.legend()</span>
-<span id="cb14-11"><a href="#cb14-11"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb14-4"><a href="#cb14-4"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">7</span>))</span>
+<span id="cb14-5"><a href="#cb14-5"></a>plt.ylim([<span class="dv">0</span>, <span class="dv">50000</span>])</span>
+<span id="cb14-6"><a href="#cb14-6"></a>plt.xlim([<span class="dv">0</span>, <span class="dv">50000</span>])</span>
+<span id="cb14-7"><a href="#cb14-7"></a>ax.scatter(y<span class="op">=</span>predicted_counts, x<span class="op">=</span>actual_counts, marker<span class="op">=</span><span class="st">'.'</span>, color <span class="op">=</span> <span class="st">"blue"</span>)</span>
+<span id="cb14-8"><a href="#cb14-8"></a>ax.plot((<span class="dv">0</span>, <span class="dv">1</span>), (<span class="dv">0</span>, <span class="dv">1</span>), color <span class="op">=</span> <span class="st">"gray"</span>, transform<span class="op">=</span>ax.transAxes, ls <span class="op">=</span> <span class="st">'--'</span>, label<span class="op">=</span><span class="st">"1:1 line"</span>)</span>
+<span id="cb14-9"><a href="#cb14-9"></a>ax.plot(actual_counts, m<span class="op">*</span>actual_counts<span class="op">+</span>b, color <span class="op">=</span> <span class="st">"red"</span>, label <span class="op">=</span> <span class="st">"regression fitted line"</span>)</span>
+<span id="cb14-10"><a href="#cb14-10"></a>ax.<span class="bu">set</span>(xlabel <span class="op">=</span><span class="st">"Observed counts"</span>, ylabel <span class="op">=</span> <span class="st">"Predicted counts"</span>,</span>
+<span id="cb14-11"><a href="#cb14-11"></a>       title<span class="op">=</span><span class="st">"Scatter plot of Observed versus Predicted counts"</span>)</span>
+<span id="cb14-12"><a href="#cb14-12"></a>plt.legend()</span>
+<span id="cb14-13"><a href="#cb14-13"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
 <div class="cell-output cell-output-display">
-<p><img src="modelp_files/figure-html/cell-12-output-1.png" width="687" height="677"></p>
+<p><img src="modelp_files/figure-html/cell-12-output-1.png" width="634" height="603"></p>
+</div>
+</div>
+</section>
+<section id="grafico-de-predicciones-vs-observados-por-año" class="level2">
+<h2 class="anchored" data-anchor-id="grafico-de-predicciones-vs-observados-por-año">Grafico de predicciones vs observados por año</h2>
+<div class="cell" data-execution_count="13">
+<details>
+<summary>Code</summary>
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode numberSource python number-lines code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1"></a>warnings.filterwarnings(<span class="st">"ignore"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2"></a><span class="co"># Nuevo data frame agrupando por año</span></span>
+<span id="cb15-3"><a href="#cb15-3"></a>dfa <span class="op">=</span> pd.DataFrame({<span class="st">'anio'</span>: df.ano[<span class="dv">384</span>:<span class="dv">480</span>],</span>
+<span id="cb15-4"><a href="#cb15-4"></a>              <span class="st">'observados'</span>: df.demanda_potencial[<span class="dv">384</span>:<span class="dv">480</span>],</span>
+<span id="cb15-5"><a href="#cb15-5"></a>              <span class="st">'predicciones'</span>:predicted_counts}).groupby(<span class="st">'anio'</span>, as_index<span class="op">=</span><span class="va">False</span>)[<span class="st">'observados'</span>, <span class="st">'predicciones'</span>].agg(np.<span class="bu">sum</span>)</span>
+<span id="cb15-6"><a href="#cb15-6"></a></span>
+<span id="cb15-7"><a href="#cb15-7"></a><span class="co"># Quitar observaciones con cero:</span></span>
+<span id="cb15-8"><a href="#cb15-8"></a>mask <span class="op">=</span> (dfa[<span class="st">'observados'</span>] <span class="op">==</span> <span class="dv">0</span>) <span class="op">|</span> (dfa[<span class="st">'predicciones'</span>] <span class="op">==</span> <span class="dv">0</span>)</span>
+<span id="cb15-9"><a href="#cb15-9"></a>dfa <span class="op">=</span> dfa.loc[<span class="op">~</span>mask]</span>
+<span id="cb15-10"><a href="#cb15-10"></a></span>
+<span id="cb15-11"><a href="#cb15-11"></a><span class="co"># Pivot longer de dfa</span></span>
+<span id="cb15-12"><a href="#cb15-12"></a>dfa <span class="op">=</span> pd.melt(dfa, id_vars <span class="op">=</span> <span class="st">'anio'</span>, value_vars<span class="op">=</span>[<span class="st">'observados'</span>, <span class="st">'predicciones'</span>])</span>
+<span id="cb15-13"><a href="#cb15-13"></a>dfa.rename(columns<span class="op">=</span> {<span class="st">'variable'</span>: <span class="st">'demanda_potencial'</span>, <span class="st">'value'</span>: <span class="st">'n_graduados'</span>}, inplace<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-14"><a href="#cb15-14"></a>dfa[<span class="st">'n_graduados'</span>] <span class="op">=</span> np.<span class="bu">round</span>(dfa[<span class="st">'n_graduados'</span>], <span class="dv">3</span>)</span>
+<span id="cb15-15"><a href="#cb15-15"></a></span>
+<span id="cb15-16"><a href="#cb15-16"></a></span>
+<span id="cb15-17"><a href="#cb15-17"></a><span class="co"># Grafico de Predicciones vs Observaciones por año</span></span>
+<span id="cb15-18"><a href="#cb15-18"></a>ax <span class="op">=</span> sns.lineplot(data<span class="op">=</span>dfa, x <span class="op">=</span> <span class="st">'anio'</span>, y <span class="op">=</span> <span class="st">'n_graduados'</span>, hue<span class="op">=</span><span class="st">'demanda_potencial'</span>,</span>
+<span id="cb15-19"><a href="#cb15-19"></a>                  style <span class="op">=</span> <span class="st">'demanda_potencial'</span>, errorbar<span class="op">=</span><span class="va">None</span>, markers<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb15-20"><a href="#cb15-20"></a>ax.tick_params(axis<span class="op">=</span><span class="st">'x'</span>, rotation<span class="op">=</span><span class="dv">45</span>)</span>
+<span id="cb15-21"><a href="#cb15-21"></a>plt.xlabel(<span class="st">'Año'</span>)</span>
+<span id="cb15-22"><a href="#cb15-22"></a>plt.ylabel(<span class="st">'N° de Graduados'</span>)</span>
+<span id="cb15-23"><a href="#cb15-23"></a>plt.xticks(dfa.anio)</span>
+<span id="cb15-24"><a href="#cb15-24"></a>plt.show()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</details>
+<div class="cell-output cell-output-display">
+<p><img src="modelp_files/figure-html/cell-13-output-1.png" width="621" height="452"></p>
 </div>
 </div>
 
